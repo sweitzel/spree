@@ -320,7 +320,7 @@ module Spree
           if Zone.default_tax.contains? tax_zone
             line_items.each { |line_item| rate.create_adjustment(label, line_item, line_item, false) }
           else
-            # TODO - reverse the tax adjustments included in the price
+            rate.create_adjustment(label, self, self, false)
           end
         else
           rate.create_adjustment(label, self, self, true)
