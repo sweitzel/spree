@@ -838,10 +838,7 @@ describe Spree::Order do
               Spree::Adjustment.price.count.should == 0
             end
 
-            it "should create two negative tax adjustments" do
-              @order.create_tax_charge!
-              Spree::Adjustment.tax.count.should == 2
-            end
+            pending "should create two negative tax adjustments"
           end
 
         end
