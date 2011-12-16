@@ -42,14 +42,17 @@ describe Spree::TaxRate do
 
   context "#adjust" do
     before do
-      @category  = Factory(:tax_category)
-      @cacluator = Spree::Calculator::DefaultTax.new
-      @rate      = Spree::TaxRate.create(:amount => 0.10, :calculator => @calculator, :tax_category => @category)
-      @order     = Spree::Order.create!
+      @category    = Spree::TaxCategory.create :name => "Taxable Foo"
+      @category2   = Spree::TaxCategory.create(:name => "Non Taxable")
+      @calculator  = Spree::Calculator::DefaultTax.new
+      @rate        = Spree::TaxRate.create(:amount => 0.10, :calculator => @calculator, :tax_category => @category)
+      @order       = Spree::Order.create!
+      @taxable     = Factory(:product, :tax_category => @category)
+      @nontaxable  = Factory(:product, :tax_category => @category2)
     end
 
     context "when order has no taxable line items" do
-      before { @order.add_variant(Factory(:variant, :tax_category => Factory(:tax_category))) }
+      before { @order.add_variant @nontaxable.master }
 
       it "should not create a tax adjustment" do
         @rate.adjust(@order)
@@ -58,7 +61,7 @@ describe Spree::TaxRate do
 
       it "should not create a price adjustment" do
         @rate.adjust(@order)
-        @order.adjustments.price.count.should == 0
+        @order.price_adjustments.count.should == 0
       end
 
       it "should not create a refund" do
@@ -68,10 +71,7 @@ describe Spree::TaxRate do
     end
 
     context "when order has one taxable line item" do
-      before do
-        variant = Factory(:variant, :tax_category => @category)
-        @order.add_variant(variant)
-      end
+      before { @order.add_variant @taxable.master }
 
       context "when price includes tax" do
         before { @rate.inc_tax = true }
@@ -81,7 +81,7 @@ describe Spree::TaxRate do
 
           it "should create one price adjustment" do
             @rate.adjust(@order)
-            @order.adjustments.price.count.should == 1
+            @order.price_adjustments.count.should == 1
           end
 
           it "should not create a tax refund" do
@@ -100,7 +100,7 @@ describe Spree::TaxRate do
 
           it "should not create a price adjustment" do
             @rate.adjust(@order)
-            @order.adjustments.price.count.should == 0
+            @order.price_adjustments.count.should == 0
           end
 
           it "should create a tax refund" do
@@ -121,7 +121,7 @@ describe Spree::TaxRate do
 
         it "should not create price adjustment" do
           @rate.adjust(@order)
-          @order.adjustments.price.count.should == 0
+          @order.price_adjustments.count.should == 0
         end
 
         it "should not create a tax refund" do
@@ -139,8 +139,9 @@ describe Spree::TaxRate do
 
     context "when order has multiple taxable line items" do
       before do
-        @order.add_variant(Factory(:variant, :tax_category => @category))
-        @order.add_variant(Factory(:variant, :tax_category => @category))
+        @taxable2 = Factory(:product, :tax_category => @category)
+        @order.add_variant @taxable.master
+        @order.add_variant @taxable2.master
       end
 
       context "when price includes tax" do
@@ -151,7 +152,7 @@ describe Spree::TaxRate do
 
           it "should create multiple price adjustments" do
             @rate.adjust(@order)
-            @order.adjustments.price.count.should == 2
+            @order.price_adjustments.count.should == 2
           end
 
           it "should not create a tax refund" do
@@ -170,7 +171,7 @@ describe Spree::TaxRate do
 
           it "should not create a price adjustment" do
             @rate.adjust(@order)
-            @order.adjustments.price.count.should == 0
+            @order.price_adjustments.count.should == 0
           end
 
           it "should create a single tax refund" do
@@ -191,7 +192,7 @@ describe Spree::TaxRate do
 
         it "should not create a price adjustment" do
           @rate.adjust(@order)
-          @order.adjustments.price.count.should == 0
+          @order.price_adjustments.count.should == 0
         end
 
         it "should not create a tax refund" do
