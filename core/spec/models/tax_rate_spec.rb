@@ -40,4 +40,173 @@ describe Spree::TaxRate do
     end
   end
 
+  context "#adjust" do
+    before do
+      @category  = Factory(:tax_category)
+      @cacluator = Spree::Calculator::DefaultTax.new
+      @rate      = Spree::TaxRate.create(:amount => 0.10, :calculator => @calculator, :tax_category => @category)
+      @order     = Spree::Order.create!
+    end
+
+    context "when order has no taxable line items" do
+      before { @order.add_variant(Factory(:variant, :tax_category => Factory(:tax_category))) }
+
+      it "should not create a tax adjustment" do
+        @rate.adjust(@order)
+        @order.adjustments.tax.count.should == 0
+      end
+
+      it "should not create a price adjustment" do
+        @rate.adjust(@order)
+        @order.adjustments.price.count.should == 0
+      end
+
+      it "should not create a refund" do
+        @rate.adjust(@order)
+        @order.adjustments.tax.credit.count.should == 0
+      end
+    end
+
+    context "when order has one taxable line item" do
+      before do
+        variant = Factory(:variant, :tax_category => @category)
+        @order.add_variant(variant)
+      end
+
+      context "when price includes tax" do
+        before { @rate.inc_tax = true }
+
+        context "when zone is contained by default tax zone" do
+          before { Spree::Zone.stub_chain :default_tax, :contains? => true }
+
+          it "should create one price adjustment" do
+            @rate.adjust(@order)
+            @order.adjustments.price.count.should == 1
+          end
+
+          it "should not create a tax refund" do
+            @rate.adjust(@order)
+            @order.adjustments.tax.credit.count.should == 0
+          end
+
+          it "should not create a tax adjustment" do
+            @rate.adjust(@order)
+            @order.adjustments.tax.count.should == 0
+          end
+        end
+
+        context "when zone is not contained by default tax zone" do
+          before { Spree::Zone.stub_chain :default_tax, :contains? => false }
+
+          it "should not create a price adjustment" do
+            @rate.adjust(@order)
+            @order.adjustments.price.count.should == 0
+          end
+
+          it "should create a tax refund" do
+            @rate.adjust(@order)
+            @order.adjustments.tax.credit.count.should == 1
+          end
+
+          it "should not create a tax adjustment" do
+            @rate.adjust(@order)
+            @order.adjustments.tax.count.should == 0
+          end
+        end
+
+      end
+
+      context "when price does not include tax" do
+        before { @rate.inc_tax = false }
+
+        it "should not create price adjustment" do
+          @rate.adjust(@order)
+          @order.adjustments.price.count.should == 0
+        end
+
+        it "should not create a tax refund" do
+          @rate.adjust(@order)
+          @order.adjustments.tax.credit.count.should == 0
+        end
+
+        it "should create a tax adjustment" do
+          @rate.adjust(@order)
+          @order.adjustments.tax.count.should == 1
+        end
+      end
+
+    end
+
+    context "when order has multiple taxable line items" do
+      before do
+        @order.add_variant(Factory(:variant, :tax_category => @category))
+        @order.add_variant(Factory(:variant, :tax_category => @category))
+      end
+
+      context "when price includes tax" do
+        before { @rate.inc_tax = true }
+
+        context "when zone is contained by default tax zone" do
+          before { Spree::Zone.stub_chain :default_tax, :contains? => true }
+
+          it "should create multiple price adjustments" do
+            @rate.adjust(@order)
+            @order.adjustments.price.count.should == 2
+          end
+
+          it "should not create a tax refund" do
+            @rate.adjust(@order)
+            @order.adjustments.tax.credit.count.should == 0
+          end
+
+          it "should not create a tax adjustment" do
+            @rate.adjust(@order)
+            @order.adjustments.tax.count.should == 0
+          end
+        end
+
+        context "when zone is not contained by default tax zone" do
+          before { Spree::Zone.stub_chain :default_tax, :contains? => false }
+
+          it "should not create a price adjustment" do
+            @rate.adjust(@order)
+            @order.adjustments.price.count.should == 0
+          end
+
+          it "should create a single tax refund" do
+            @rate.adjust(@order)
+            @order.adjustments.tax.credit.count.should == 1
+          end
+
+          it "should create a single tax adjustment" do
+            @rate.adjust(@order)
+            @order.adjustments.tax.count.should == 1
+          end
+        end
+
+      end
+
+      context "when price does not include tax" do
+        before { @rate.inc_tax = false }
+
+        it "should not create a price adjustment" do
+          @rate.adjust(@order)
+          @order.adjustments.price.count.should == 0
+        end
+
+        it "should not create a tax refund" do
+          @rate.adjust(@order)
+          @order.adjustments.tax.credit.count.should == 0
+        end
+
+        it "should create a single tax adjustment" do
+          @rate.adjust(@order)
+          @order.adjustments.tax.count.should == 1
+        end
+      end
+
+    end
+
+  end
+
 end

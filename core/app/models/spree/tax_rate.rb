@@ -23,5 +23,10 @@ module Spree
 
       category.effective_amount || 0
     end
+
+    # Creates necessary tax adjustments for the order.
+    def adjust(order)
+
+    end
   end
 end
