@@ -33,6 +33,7 @@ module Spree
     scope :shipping, lambda { where(:label => I18n.t(:shipping)) }
     scope :optional, where(:mandatory => false)
     scope :eligible, where(:eligible => true)
+    scope :credit, where("amount < 0")
 
     after_save { adjustable.update! if adjustable.is_a? Order }
     after_destroy { adjustable.update! if adjustable.is_a? Order }
