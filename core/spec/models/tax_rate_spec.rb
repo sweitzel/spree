@@ -66,7 +66,7 @@ describe Spree::TaxRate do
 
       it "should not create a refund" do
         @rate.adjust(@order)
-        @order.adjustments.tax.credit.count.should == 0
+        @order.adjustments.credit.count.should == 0
       end
     end
 
@@ -86,7 +86,7 @@ describe Spree::TaxRate do
 
           it "should not create a tax refund" do
             @rate.adjust(@order)
-            @order.adjustments.tax.credit.count.should == 0
+            @order.adjustments.credit.count.should == 0
           end
 
           it "should not create a tax adjustment" do
@@ -105,7 +105,7 @@ describe Spree::TaxRate do
 
           it "should create a tax refund" do
             @rate.adjust(@order)
-            @order.adjustments.tax.credit.count.should == 1
+            @order.adjustments.credit.count.should == 1
           end
 
           it "should not create a tax adjustment" do
@@ -126,7 +126,7 @@ describe Spree::TaxRate do
 
         it "should not create a tax refund" do
           @rate.adjust(@order)
-          @order.adjustments.tax.credit.count.should == 0
+          @order.adjustments.credit.count.should == 0
         end
 
         it "should create a tax adjustment" do
@@ -157,7 +157,7 @@ describe Spree::TaxRate do
 
           it "should not create a tax refund" do
             @rate.adjust(@order)
-            @order.adjustments.tax.credit.count.should == 0
+            @order.adjustments.credit.count.should == 0
           end
 
           it "should not create a tax adjustment" do
@@ -176,12 +176,12 @@ describe Spree::TaxRate do
 
           it "should create a single tax refund" do
             @rate.adjust(@order)
-            @order.adjustments.tax.credit.count.should == 1
+            @order.adjustments.credit.count.should == 1
           end
 
-          it "should create a single tax adjustment" do
+          it "should not create a tax adjustment" do
             @rate.adjust(@order)
-            @order.adjustments.tax.count.should == 1
+            @order.adjustments.tax.count.should == 0
           end
         end
 
@@ -197,7 +197,7 @@ describe Spree::TaxRate do
 
         it "should not create a tax refund" do
           @rate.adjust(@order)
-          @order.adjustments.tax.credit.count.should == 0
+          @order.adjustments.credit.count.should == 0
         end
 
         it "should create a single tax adjustment" do
