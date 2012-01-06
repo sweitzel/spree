@@ -23,4 +23,6 @@
   <span id="new_opt_link" data-hook="links">
     <%= link_to icon('add') + ' ' + t(:add_option_type), available_admin_product_option_types_url(@product), :remote => :true, :class => 'iconlink' %>
   </span>
+<% else %>
+  <p>Note: Adding new option types is only possible when no product variants are yet defined.</p>
 <% end %>
