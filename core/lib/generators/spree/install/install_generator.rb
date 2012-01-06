@@ -107,7 +107,7 @@ Disallow: /users
 
       if @install_default_gateways
         gems['spree_usa_epay'] = { :git => 'git@github.com:spree/spree_usa_epay.git',
-                                   :ref => '01db40c31e6933c7744403ce13536a34167165eb' }
+                                   :ref => '2be3faede9594327b9bb548ad042ef28f2836509' }
 
         gems['spree_skrill'] = { :git => 'git@github.com:spree/spree_skrill.git',
                                  :ref => '6743bcbd0146d1c7145d6befc648005d8d0cf79a' }
@@ -173,6 +173,15 @@ Spree::Auth::Engine.load_seed if defined?(Spree::Auth)
         puts "We added the following line to your application's config/routes.rb file:"
         puts " "
         puts "    mount Spree::Core::Engine, :at => '/'"
+      end
+    end
+
+    def complete
+      unless options[:quiet]
+        puts "*" * 50
+        puts "Spree has been installed successfully. You're all ready to go!"
+        puts " "
+        puts "Enjoy!"
       end
     end
 
